@@ -1,5 +1,967 @@
+=== TABLA DE SÍMBOLOS ===
+Símbolo    Tipo       Dirección  Valor      Tipo Dato 
+--------------------------------------------------
+3          número     1079       3          int       
+4          número     1069       4          int       
+5          número     1064       5          int       
+2          número     1090       2          int       
+a          variable   1070       N/A        char      
+b          variable   1071       N/A        char      
+c          variable   1088       N/A        char      
+d          variable   1061       N/A        char      
+x          variable   1084       N/A        char      
+y          variable   1076       N/A        char      
+z          variable   1044       N/A        char      
+0          número     1091       0          int       
+1          número     1056       1          int       
+e          variable   1062       N/A        char      
+10         número     1087       10         int       
+3.14       número     1074       3.14       float     
+15         número     1075       15         int       
+9          número     1078       9          int       
+3.1416     número     1089       3.1416     float     
+0.7854     número     1092       0.7854     float     
 
 
+----- Expresión 1: (3 * 4) + (5 / 2) - (2^3) -----
+
+### Comparativa de optimización para: `(3 * 4) + (5 / 2) - (2^3)`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        6 |          1 |   83.3% |
+| Operaciones realizadas|        5 |          0 |  100.0% |
+| Líneas de código      |        6 |          1 |   83.3% |
+
+**Técnicas aplicadas**: Eliminación de subexpresiones comunes (CSE), Strength Reduction, Constant Folding/Propagation
 
 
+📌 Notaciones:
+🔹 Prefija: - + * 3 4 / 5 2 ^ 2 3
+🔹 Postfija: 3 4 * 5 2 / + 2 3 ^ -
 
+📌 Código Intermedio:
+ORIGINAL:
+T0 = 3 * 4
+T1 = 5 / 2
+T2 = T0 + T1
+T3 = 2 ^ 3
+T4 = T2 - T3
+X = T4
+
+OPTIMIZADO:
+X = 6.5
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH 3
+PUSH 4
+MUL
+PUSH 5
+PUSH 2
+DIV
+ADD
+PUSH 2
+PUSH 3
+POW
+SUB
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH 6.5
+
+📌 Triplos:
+ORIGINAL:
+(1, *, 3, 4)
+(2, /, 5, 2)
+(3, +, T0, T1)
+(4, ^, 2, 3)
+(5, -, T2, T3)
+(6, =, T4, X)
+
+OPTIMIZADO:
+(1, =, 6.5, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, *, 3, 4, T0)
+(2, /, 5, 2, T1)
+(3, +, T0, T1, T2)
+(4, ^, 2, 3, T3)
+(5, -, T2, T3, T4)
+(6, =, T4, , X)
+
+OPTIMIZADO:
+(1, =, 6.5, , X)
+
+----- Expresión 2: (a*b + c) / (a*b - d) + (a*b) -----
+
+### Comparativa de optimización para: `(a*b + c) / (a*b - d) + (a*b)`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        8 |          6 |   25.0% |
+| Operaciones realizadas|        7 |          5 |   28.6% |
+| Líneas de código      |        8 |          6 |   25.0% |
+
+**Técnicas aplicadas**: Strength Reduction
+
+
+📌 Notaciones:
+🔹 Prefija: + / + * a b c - * a b d * a b
+🔹 Postfija: a b * c + a b * d - / a b * +
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = a * b
+T1 = T0 + c
+T2 = a * b
+T3 = T2 - d
+T4 = T1 / T3
+T5 = a * b
+T6 = T4 + T5
+X = T6
+
+OPTIMIZADO:
+T0 = a * b
+T1 = T0 + c
+T3 = T0 - d
+T4 = T1 / T3
+T6 = T4 + T0
+X = T6
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH a
+PUSH b
+MUL
+PUSH c
+ADD
+PUSH a
+PUSH b
+MUL
+PUSH d
+SUB
+DIV
+PUSH a
+PUSH b
+MUL
+ADD
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH a
+PUSH b
+MUL
+PUSH T0
+PUSH c
+ADD
+PUSH T0
+PUSH d
+SUB
+PUSH T1
+PUSH T3
+DIV
+PUSH T4
+PUSH T0
+ADD
+
+📌 Triplos:
+ORIGINAL:
+(1, *, a, b)
+(2, +, T0, c)
+(3, *, a, b)
+(4, -, T2, d)
+(5, /, T1, T3)
+(6, *, a, b)
+(7, +, T4, T5)
+(8, =, T6, X)
+
+OPTIMIZADO:
+(1, *, a, b)
+(2, +, T0, c)
+(3, -, T0, d)
+(4, /, T1, T3)
+(5, +, T4, T0)
+(6, =, T6, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, *, a, b, T0)
+(2, +, T0, c, T1)
+(3, *, a, b, T2)
+(4, -, T2, d, T3)
+(5, /, T1, T3, T4)
+(6, *, a, b, T5)
+(7, +, T4, T5, T6)
+(8, =, T6, , X)
+
+OPTIMIZADO:
+(1, *, a, b, T0)
+(2, +, T0, c, T1)
+(3, -, T0, d, T3)
+(4, /, T1, T3, T4)
+(5, +, T4, T0, T6)
+(6, =, T6, , X)
+
+----- Expresión 3: (2 + 2) * (x + x) / (4^2) -----
+
+### Comparativa de optimización para: `(2 + 2) * (x + x) / (4^2)`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        6 |          4 |   33.3% |
+| Operaciones realizadas|        5 |          3 |   40.0% |
+| Líneas de código      |        6 |          4 |   33.3% |
+
+**Técnicas aplicadas**: Eliminación de subexpresiones comunes (CSE), Strength Reduction
+
+
+📌 Notaciones:
+🔹 Prefija: / * + 2 2 + x x ^ 4 2
+🔹 Postfija: 2 2 + x x + * 4 2 ^ /
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = 2 + 2
+T1 = x + x
+T2 = T0 * T1
+T3 = 4 ^ 2
+T4 = T2 / T3
+X = T4
+
+OPTIMIZADO:
+T1 = 2 * x
+T2 = 4 * T1
+T4 = T2 / 16
+X = T4
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH 2
+PUSH 2
+ADD
+PUSH x
+PUSH x
+ADD
+MUL
+PUSH 4
+PUSH 2
+POW
+DIV
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH 2.0
+PUSH x
+MUL
+PUSH 4.0
+PUSH T1
+MUL
+PUSH T2
+PUSH 16.0
+DIV
+
+📌 Triplos:
+ORIGINAL:
+(1, +, 2, 2)
+(2, +, x, x)
+(3, *, T0, T1)
+(4, ^, 4, 2)
+(5, /, T2, T3)
+(6, =, T4, X)
+
+OPTIMIZADO:
+(1, *, 2, x)
+(2, *, 4, T1)
+(3, /, T2, 16)
+(4, =, T4, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, +, 2, 2, T0)
+(2, +, x, x, T1)
+(3, *, T0, T1, T2)
+(4, ^, 4, 2, T3)
+(5, /, T2, T3, T4)
+(6, =, T4, , X)
+
+OPTIMIZADO:
+(1, *, 2, x, T1)
+(2, *, 4, T1, T2)
+(3, /, T2, 16, T4)
+(4, =, T4, , X)
+
+----- Expresión 4: (a*b + a*b + c) / (a*b - d) + (a*b)^2 -----
+
+### Comparativa de optimización para: `(a*b + a*b + c) / (a*b - d) + (a*b)^2`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |       11 |          8 |   27.3% |
+| Operaciones realizadas|       10 |          7 |   30.0% |
+| Líneas de código      |       11 |          8 |   27.3% |
+
+**Técnicas aplicadas**: Strength Reduction
+
+
+📌 Notaciones:
+🔹 Prefija: + / + + * a b * a b c - * a b d ^ * a b 2
+🔹 Postfija: a b * a b * + c + a b * d - / a b * 2 ^ +
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = a * b
+T1 = a * b
+T2 = T0 + T1
+T3 = T2 + c
+T4 = a * b
+T5 = T4 - d
+T6 = T3 / T5
+T7 = a * b
+T8 = T7 ^ 2
+T9 = T6 + T8
+X = T9
+
+OPTIMIZADO:
+T0 = a * b
+T2 = 2 * T0
+T3 = T2 + c
+T5 = T0 - d
+T6 = T3 / T5
+T8 = T0 * T0
+T9 = T6 + T8
+X = T9
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH a
+PUSH b
+MUL
+PUSH a
+PUSH b
+MUL
+ADD
+PUSH c
+ADD
+PUSH a
+PUSH b
+MUL
+PUSH d
+SUB
+DIV
+PUSH a
+PUSH b
+MUL
+PUSH 2
+POW
+ADD
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH a
+PUSH b
+MUL
+PUSH 2.0
+PUSH T0
+MUL
+PUSH T2
+PUSH c
+ADD
+PUSH T0
+PUSH d
+SUB
+PUSH T3
+PUSH T5
+DIV
+PUSH T0
+PUSH T0
+MUL
+PUSH T6
+PUSH T8
+ADD
+
+📌 Triplos:
+ORIGINAL:
+(1, *, a, b)
+(2, *, a, b)
+(3, +, T0, T1)
+(4, +, T2, c)
+(5, *, a, b)
+(6, -, T4, d)
+(7, /, T3, T5)
+(8, *, a, b)
+(9, ^, T7, 2)
+(10, +, T6, T8)
+(11, =, T9, X)
+
+OPTIMIZADO:
+(1, *, a, b)
+(2, *, 2, T0)
+(3, +, T2, c)
+(4, -, T0, d)
+(5, /, T3, T5)
+(6, *, T0, T0)
+(7, +, T6, T8)
+(8, =, T9, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, *, a, b, T0)
+(2, *, a, b, T1)
+(3, +, T0, T1, T2)
+(4, +, T2, c, T3)
+(5, *, a, b, T4)
+(6, -, T4, d, T5)
+(7, /, T3, T5, T6)
+(8, *, a, b, T7)
+(9, ^, T7, 2, T8)
+(10, +, T6, T8, T9)
+(11, =, T9, , X)
+
+OPTIMIZADO:
+(1, *, a, b, T0)
+(2, *, 2, T0, T2)
+(3, +, T2, c, T3)
+(4, -, T0, d, T5)
+(5, /, T3, T5, T6)
+(6, *, T0, T0, T8)
+(7, +, T6, T8, T9)
+(8, =, T9, , X)
+
+----- Expresión 5: ((a + b) * (a - b)) / ((a + b) * (a + b)) -----
+
+### Comparativa de optimización para: `((a + b) * (a - b)) / ((a + b) * (a + b))`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        8 |          6 |   25.0% |
+| Operaciones realizadas|        7 |          5 |   28.6% |
+| Líneas de código      |        8 |          6 |   25.0% |
+
+**Técnicas aplicadas**: Strength Reduction
+
+
+📌 Notaciones:
+🔹 Prefija: / * + a b - a b * + a b + a b
+🔹 Postfija: a b + a b - * a b + a b + * /
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = a + b
+T1 = a - b
+T2 = T0 * T1
+T3 = a + b
+T4 = a + b
+T5 = T3 * T4
+T6 = T2 / T5
+X = T6
+
+OPTIMIZADO:
+T0 = a + b
+T1 = a - b
+T2 = T0 * T1
+T5 = T0 * T0
+T6 = T2 / T5
+X = T6
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH a
+PUSH b
+ADD
+PUSH a
+PUSH b
+SUB
+MUL
+PUSH a
+PUSH b
+ADD
+PUSH a
+PUSH b
+ADD
+MUL
+DIV
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH a
+PUSH b
+ADD
+PUSH a
+PUSH b
+SUB
+PUSH T0
+PUSH T1
+MUL
+PUSH T0
+PUSH T0
+MUL
+PUSH T2
+PUSH T5
+DIV
+
+📌 Triplos:
+ORIGINAL:
+(1, +, a, b)
+(2, -, a, b)
+(3, *, T0, T1)
+(4, +, a, b)
+(5, +, a, b)
+(6, *, T3, T4)
+(7, /, T2, T5)
+(8, =, T6, X)
+
+OPTIMIZADO:
+(1, +, a, b)
+(2, -, a, b)
+(3, *, T0, T1)
+(4, *, T0, T0)
+(5, /, T2, T5)
+(6, =, T6, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, +, a, b, T0)
+(2, -, a, b, T1)
+(3, *, T0, T1, T2)
+(4, +, a, b, T3)
+(5, +, a, b, T4)
+(6, *, T3, T4, T5)
+(7, /, T2, T5, T6)
+(8, =, T6, , X)
+
+OPTIMIZADO:
+(1, +, a, b, T0)
+(2, -, a, b, T1)
+(3, *, T0, T1, T2)
+(4, *, T0, T0, T5)
+(5, /, T2, T5, T6)
+(6, =, T6, , X)
+
+----- Expresión 6: (x * y + z) * (x * y - z) - (x * y)^2 -----
+
+### Comparativa de optimización para: `(x * y + z) * (x * y - z) - (x * y)^2`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        9 |          7 |   22.2% |
+| Operaciones realizadas|        8 |          6 |   25.0% |
+| Líneas de código      |        9 |          7 |   22.2% |
+
+**Técnicas aplicadas**: Strength Reduction
+
+
+📌 Notaciones:
+🔹 Prefija: - * + * x y z - * x y z ^ * x y 2
+🔹 Postfija: x y * z + x y * z - * x y * 2 ^ -
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = x * y
+T1 = T0 + z
+T2 = x * y
+T3 = T2 - z
+T4 = T1 * T3
+T5 = x * y
+T6 = T5 ^ 2
+T7 = T4 - T6
+X = T7
+
+OPTIMIZADO:
+T0 = x * y
+T1 = T0 + z
+T3 = T0 - z
+T4 = T1 * T3
+T6 = T0 * T0
+T7 = T4 - T6
+X = T7
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH x
+PUSH y
+MUL
+PUSH z
+ADD
+PUSH x
+PUSH y
+MUL
+PUSH z
+SUB
+MUL
+PUSH x
+PUSH y
+MUL
+PUSH 2
+POW
+SUB
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH x
+PUSH y
+MUL
+PUSH T0
+PUSH z
+ADD
+PUSH T0
+PUSH z
+SUB
+PUSH T1
+PUSH T3
+MUL
+PUSH T0
+PUSH T0
+MUL
+PUSH T4
+PUSH T6
+SUB
+
+📌 Triplos:
+ORIGINAL:
+(1, *, x, y)
+(2, +, T0, z)
+(3, *, x, y)
+(4, -, T2, z)
+(5, *, T1, T3)
+(6, *, x, y)
+(7, ^, T5, 2)
+(8, -, T4, T6)
+(9, =, T7, X)
+
+OPTIMIZADO:
+(1, *, x, y)
+(2, +, T0, z)
+(3, -, T0, z)
+(4, *, T1, T3)
+(5, *, T0, T0)
+(6, -, T4, T6)
+(7, =, T7, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, *, x, y, T0)
+(2, +, T0, z, T1)
+(3, *, x, y, T2)
+(4, -, T2, z, T3)
+(5, *, T1, T3, T4)
+(6, *, x, y, T5)
+(7, ^, T5, 2, T6)
+(8, -, T4, T6, T7)
+(9, =, T7, , X)
+
+OPTIMIZADO:
+(1, *, x, y, T0)
+(2, +, T0, z, T1)
+(3, -, T0, z, T3)
+(4, *, T1, T3, T4)
+(5, *, T0, T0, T6)
+(6, -, T4, T6, T7)
+(7, =, T7, , X)
+
+----- Expresión 7: a + 0 - 0 + b -----
+
+### Comparativa de optimización para: `a + 0 - 0 + b`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        4 |          2 |   50.0% |
+| Operaciones realizadas|        3 |          1 |   66.7% |
+| Líneas de código      |        4 |          2 |   50.0% |
+
+**Técnicas aplicadas**: Eliminación de subexpresiones comunes (CSE), Strength Reduction
+
+
+📌 Notaciones:
+🔹 Prefija: + - + a 0 0 b
+🔹 Postfija: a 0 + 0 - b +
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = a + 0
+T1 = T0 - 0
+T2 = T1 + b
+X = T2
+
+OPTIMIZADO:
+T2 = a + b
+X = T2
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH a
+PUSH 0
+ADD
+PUSH 0
+SUB
+PUSH b
+ADD
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH a
+PUSH b
+ADD
+
+📌 Triplos:
+ORIGINAL:
+(1, +, a, 0)
+(2, -, T0, 0)
+(3, +, T1, b)
+(4, =, T2, X)
+
+OPTIMIZADO:
+(1, +, a, b)
+(2, =, T2, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, +, a, 0, T0)
+(2, -, T0, 0, T1)
+(3, +, T1, b, T2)
+(4, =, T2, , X)
+
+OPTIMIZADO:
+(1, +, a, b, T2)
+(2, =, T2, , X)
+
+----- Expresión 8: 1 * x * 1 * y / 1 -----
+
+### Comparativa de optimización para: `1 * x * 1 * y / 1`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        5 |          1 |   80.0% |
+| Operaciones realizadas|        4 |          1 |   75.0% |
+| Líneas de código      |        5 |          1 |   80.0% |
+
+**Técnicas aplicadas**: Eliminación de subexpresiones comunes (CSE), Constant Folding/Propagation
+
+
+📌 Notaciones:
+🔹 Prefija: / * * * 1 x 1 y 1
+🔹 Postfija: 1 x * 1 * y * 1 /
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = 1 * x
+T1 = T0 * 1
+T2 = T1 * y
+T3 = T2 / 1
+X = T3
+
+OPTIMIZADO:
+T2 = x * y
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH 1
+PUSH x
+MUL
+PUSH 1
+MUL
+PUSH y
+MUL
+PUSH 1
+DIV
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH x
+PUSH y
+MUL
+
+📌 Triplos:
+ORIGINAL:
+(1, *, 1, x)
+(2, *, T0, 1)
+(3, *, T1, y)
+(4, /, T2, 1)
+(5, =, T3, X)
+
+OPTIMIZADO:
+(1, *, x, y)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, *, 1, x, T0)
+(2, *, T0, 1, T1)
+(3, *, T1, y, T2)
+(4, /, T2, 1, T3)
+(5, =, T3, , X)
+
+OPTIMIZADO:
+(1, *, x, y, T2)
+
+----- Expresión 9: juan + 5 -----
+❌ Error al procesar la expresión: Función o variable no definida: 'juan'
+
+----- Expresión 10: (a + b * (c - (d + e) -----
+❌ Error al procesar la expresión: Paréntesis no balanceados. 
+
+----- Expresión 11: 3 + * 5 -----
+❌ Error al procesar la expresión: Error en conversión a código intermedio: Expresión inválida: no hay suficientes operandos para el operador.
+
+----- Expresión 12: 3 / 0 -----
+❌ Error al procesar la expresión: División por cero no permitida
+
+----- Expresión 13: 2 + (3 * (4 - ) -----
+❌ Error al procesar la expresión: Paréntesis no balanceados. 
+
+----- Expresión 14: a + b * c + @ -----
+❌ Error al procesar la expresión: Carácter no permitido: '@'
+
+----- Expresión 15: log(10) -----
+❌ Error al procesar la expresión: Función o variable no definida: 'log'
+
+----- Expresión 16: sqrt() -----
+❌ Error al procesar la expresión: Expresión inválida: falta un operador
+
+----- Expresión 17: () -----
+❌ Error al procesar la expresión: Paréntesis vacíos
+
+----- Expresión 18: 3.14.15 -----
+❌ Error al procesar la expresión: Número mal formado: múltiples puntos decimales
+
+----- Expresión 19: y / 2 + sqrt(9) * 3 -----
+❌ Error al procesar la expresión: Error en conversión a postfijo: 'sqrt'
+
+----- Expresión 20: juan + pedro -----
+❌ Error al procesar la expresión: Función o variable no definida: 'juan'
+
+----- Expresión 21: 10 + -----
+❌ Error al procesar la expresión: Expresión incompleta
+
+----- Expresión 22: -10 - 10 -----
+❌ Error al procesar la expresión: Error en conversión a código intermedio: Expresión inválida: no hay suficientes operandos para el operador.
+
+----- Expresión 23: 10 -----
+❌ Error al procesar la expresión: Expresión inválida: falta un operador
+
+----- Expresión 24: x -----
+❌ Error al procesar la expresión: Expresión inválida: falta un operador
+
+----- Expresión 25: sin(10) -----
+❌ Error al procesar la expresión: Expresión inválida: falta un operador
+
+----- Expresión 26: 10 + & -----
+❌ Error al procesar la expresión: Carácter no permitido: '&'
+
+----- Expresión 27: sin($) + 10 + c -----
+❌ Error al procesar la expresión: Carácter no permitido: '$'
+
+----- Expresión 28: $ -----
+❌ Error al procesar la expresión: Carácter no permitido: '$'
+
+----- Expresión 29: & -----
+❌ Error al procesar la expresión: Carácter no permitido: '&'
+
+----- Expresión 30: / -----
+❌ Error al procesar la expresión: Expresión incompleta
+
+----- Expresión 31: sin(3.1416 / 2) -----
+
+### Comparativa de optimización para: `sin(3.1416 / 2)`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        3 |          0 |  100.0% |
+| Operaciones realizadas|        1 |          0 |  100.0% |
+| Líneas de código      |        3 |          0 |  100.0% |
+
+**Técnicas aplicadas**: Eliminación de subexpresiones comunes (CSE), Constant Folding/Propagation
+
+
+📌 Notaciones:
+🔹 Prefija: sin / 3.1416 2
+🔹 Postfija: 3.1416 2 / sin
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = 3.1416 / 2
+T1 = sin(T0)
+X = T1
+
+OPTIMIZADO:
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH 3.1416
+PUSH 2
+DIV
+SIN
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH X
+
+📌 Triplos:
+ORIGINAL:
+(1, /, 3.1416, 2)
+(2, =, sin(T0), T1)
+(3, =, T1, X)
+
+OPTIMIZADO:
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, /, 3.1416, 2, T0)
+(2, =, sin(T0), , T1)
+(3, =, T1, , X)
+
+OPTIMIZADO:
+
+----- Expresión 32: cos(0) + tan(0.7854) -----
+
+### Comparativa de optimización para: `cos(0) + tan(0.7854)`
+
+| Métrica               | Original | Optimizado | Reducción |
+|-----------------------|----------|------------|-----------|
+| Temporales usados     |        4 |          2 |   50.0% |
+| Operaciones realizadas|        1 |          1 |    0.0% |
+| Líneas de código      |        4 |          2 |   50.0% |
+
+**Técnicas aplicadas**: Eliminación de subexpresiones comunes (CSE)
+
+
+📌 Notaciones:
+🔹 Prefija: + cos 0 tan 0.7854
+🔹 Postfija: 0 cos 0.7854 tan +
+
+📌 Código Intermedio:
+ORIGINAL:
+T0 = cos(0)
+T1 = tan(0.7854)
+T2 = T0 + T1
+X = T2
+
+OPTIMIZADO:
+T2 = cos(0) + tan(0.7854)
+X = T2
+
+📌 Código P:
+ORIGINAL (desde infijo):
+PUSH 0
+COS
+PUSH 0.7854
+TAN
+ADD
+
+OPTIMIZADO (desde código intermedio optimizado):
+PUSH cos(0)
+PUSH tan(0.7854)
+ADD
+
+📌 Triplos:
+ORIGINAL:
+(1, =, cos(0), T0)
+(2, =, tan(0.7854), T1)
+(3, +, T0, T1)
+(4, =, T2, X)
+
+OPTIMIZADO:
+(1, +, cos(0), tan(0.7854))
+(2, =, T2, X)
+
+📌 Cuádruplos:
+ORIGINAL:
+(1, =, cos(0), , T0)
+(2, =, tan(0.7854), , T1)
+(3, +, T0, T1, T2)
+(4, =, T2, , X)
+
+OPTIMIZADO:
+(1, +, cos(0), tan(0.7854), T2)
+(2, =, T2, , X)
