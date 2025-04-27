@@ -1,0 +1,231 @@
+  
+
+```mermaid
+
+flowchart TD
+    A[Inicio] --> B[Cargar Expresiones]
+    B --> C[Construir Tabla de Símbolos]
+    C --> D[Procesar Cada Expresión]
+    
+    D --> E1[Verificar Errores]
+    E1 --> E2[Convertir a Postfijo]
+    E1 --> E3[Convertir a Prefijo]
+    
+    D --> F[Generar Código Intermedio]
+    F --> F1[Original: Triplos/Cuádruplos]
+    F --> F2[Optimizado]
+    
+    subgraph Optimización
+        F2 --> O1[Plegado de Constantes]
+        O1 --> O2[Strength Reduction]
+        O2 --> O3[Elim. Subexpresiones]
+        O3 --> O4[Optim. Mirilla]
+        O4 --> O5[Limpieza Temporales]
+    end
+    
+    F2 --> G[Generar Representaciones]
+    G --> G1[Código P Optimizado]
+    G --> G2[Triplos Optimizados]
+    G --> G3[Cuádruplos Optimizados]
+    
+    D --> H[Generar Comparativas]
+    H --> H1[Métricas]
+    H --> H2[Tabla Comparativa]
+    
+    G --> I[Guardar Resultados]
+    H --> I
+    I --> J[Mostrar Salida]
+    
+    click E1 href "#verificación-de-errores" "Ver detalles"
+    click O1 href "#optimización-de-constantes" "Ver detalles"
+    click O2 href "#strength-reduction" "Ver detalles"
+    click O3 href "#eliminación-de-subexpresiones" "Ver detalles"
+    click O4 href "#optimización-de-mirilla" "Ver detalles"
+
+```
+\
+\
+\
+\
+\
+
+```mermaid
+
+flowchart TD
+    A[Inicio main] --> B[Cargar expresiones archivo → array]
+    B --> C[Mostrar menú de opciones]
+    C --> D{Usuario selecciona opciones 1-6}
+    D -->|Opciones válidas| E[Procesar cada expresión]
+    D -->|Opción 6| F[Salir]
+    
+    %% Subproceso principal
+    E --> G[Try]
+    G --> H[Verificar errores con verificar_errores]
+    H --> I{¿Hay error?}
+    I -->|Sí| J[Lanzar ValueError]
+    I -->|No| K[Definir variables\nsegún opciones]
+    
+    %% Opciones de procesamiento
+    K --> L1["necesita_notaciones = '1' o '5'"]
+    K --> L2["necesita_codigo_p = '2' o '5'"]
+    K --> L3["necesita_triplos = '3' o '5'"]
+    K --> L4["necesita_cuadruplos = '4' o '5'"]
+    
+    %% Flujos de procesamiento
+    L1 -->|Sí| M[Generar postfijo/prefijo]
+    L2 -->|Sí| N[Generar código P]
+    L3 -->|Sí| O[Generar triplos]
+    L4 -->|Sí| P[Generar cuádruplos]
+    
+    %% Optimización
+    M --> Q[Optimizar código intermedio]
+    Q --> R[Calcular métricas de optimización]
+    
+    %% Generación de resultados
+    N --> S[Generar código P optimizado]
+    O --> T[Generar triplos optimizados]
+    P --> U[Generar cuádruplos optimizados]
+    R --> V[Construir tabla comparativa]
+    
+    %% Salidas finales
+    V --> W["1- Notaciones y CI"]
+    S --> X["2- Código P"]
+    T --> Y["3- Triplos"]
+    U --> Z["4- Cuádruplos"]
+    Z --> AA[Guardar en resultados.txt]
+    J --> AB[Except: Manejar error]
+    
+    %% Estilos
+    style A fill:#4CAF50,stroke:#388E3C
+    style F fill:#F44336,stroke:#D32F2F
+    style G fill:#2196F3,stroke:#1976D2
+    style Q fill:#C099,stroke:#FFA000
+    style AA fill:#4CAF50,stroke:#388E3C
+    style AB fill:#F44336,stroke:#D32F2F
+```
+\
+\
+\
+\
+\
+```mermaid
+flowchart LR
+    A[Código Original] --> B[Constant Folding]
+    B --> C[Strength Reduction]
+    C --> D[CSE]
+    D --> E[Peephole]
+    E --> F[Limpiar temporales no utilizados]
+    F --> G[Código Optimizado]
+```
+\
+\
+\
+\
+\
+
+```mermaid
+
+flowchart TB
+    subgraph Original
+        A[Postfijo] --> B[Generar CI sin optimizar]
+        B --> C[Salida con redundancias]
+    end
+
+    subgraph Optimizado
+        D[Postfijo] --> E[Generar CI base]
+        E --> F[Pipeline de 4 optimizaciones]
+        F --> G[CI limpio y eficiente]
+    end
+```
+
+
+```
+1-Primero se ejecuta la función main (def main(): )
+   *Ejecuta argar_expresiones_desde_archivo(ruta_entrada)  para convertir las 
+   expresiones del archivo datos en strings y meterlas en un array
+   *Luego esta el código para elegir de las opciones disponibles cual quiere 
+    ejecutar el usuario  (opciones = input("Opción(es): ").strip().split(',')   
+    linea 501) y se manejan errores de no elegir una opción valida. Las opciones que se le 
+    muestra al usuario son: 
+       Seleccione una o más opciones (separadas por comas):
+        1. Notaciones (prefija, postfija y código intermedio)
+        2. Código P (código intermedio)
+        3. Triplos
+        4. Cuádruplos
+        5. Todas las anteriores
+        6. Salir
+   *Acá es donde cada una de las expresiones se procesaran para sacar los resultados,    
+    (resultados = procesar_expresion(expresion, opciones_validas, i))
+   *Se guardan los resultados en un archivo resultados.txt llamando a una función 
+    (guardar_resultados(ruta_salida, resultados_totales, tabla_simbolos))
+
+2-Se llama a la función para tratar cada expresión (def procesar_expresion(expresion, opciones, numero_expresion): ). Dentro de esta función hay un try: except: y esto es lo que contiene: 
+     *Se Verifica errores comunes en una expresión matemática.
+      :param expresion: Expresión en notación infija.
+      :raises ValueError: Si se encuentra un error en la expresión., con 
+      (verificar_errores(expresion) ) esta funcion viene importado desde el 
+        archivo  GeneradorCI.py. Busca errores de: Verificar expresiones vacías,  Verificar 
+       si la expresión solo contiene un número, una letra o una función matemática sin 
+       operadores,Verificar operadores faltantes o mal colocados, Verificar división por 
+      cero, Verificar caracteres no permitidos, Verificar funciones no definidas,  Verificar 
+      funciones sin argumentos, Verificar paréntesis vacíos, Verificar expresiones 
+      incompletas, Verificar números mal formados, Verificar números mal formados (más 
+      estricto).  Si existe error, lanza ValueError y termina la ejecucion del try, y lo 
+       manda directamente al except
+      *Se definen las variables que se van a usar para determinar si se necesita cada una de 
+       las opciones. De esta forma evitamos hacer cálculos innecesarios
+                necesita_notaciones = '1' in opciones or '5' in opciones
+                necesita_codigo_p = '2' in opciones or '5' in opciones
+                necesita_triplos = '3' in opciones or '5' in opciones
+                necesita_cuadruplos = '4' in opciones or '5' in opciones
+      *Genera notaciones de infijo a postfijo (postfijo = infijo_a_postfijo(expresion)  linea)   y de infijo a prefijo  prefijo = infijo_a_prefijo(expresion)   SOLO SI SE NECESITAN 
+      *Genera código Intermedio en 
+         codigo_intermedio, _ = postfijo_a_codigo_intermedio(postfijo)
+         codigo_intermedio = normalizar_codigo(codigo_intermedio)
+        SOLO SI SE NECESITAN
+
+        Y genera el código intermedio pero optimizado en:
+            codigo_intermedio_opt = optimizar_codigo_completo(codigo_intermedio)
+
+      *Calcula métricas solo si son necesarias en:
+          metricas = calcular_metricas(codigo_intermedio, codigo_intermedio_opt)
+          resultados.append(generar_tabla_comparativa(expresion, metricas))  
+      *Dependiendo lo que haya pedido el usuario se generan acciones con la variable 
+       resultados:
+           1. Notaciones y código intermedio
+              a resultados se mete notacion postfija y prefija, codigo intermedio y codigo 
+              intermedio optimizado 
+           2. Código P
+              a resultados se mete el código p, ademas se llama a la función que ejecuta la 
+              creación del código p
+                    resultados.append(infijo_a_codigo_p(expresion))
+              además se me el código p optimizado llamando a la funcion que la crea 
+                    codigo_p_opt = generar_codigo_p_optimizado(definitions, resultado_final)
+           3. Triplos 
+              a resultados se mete los triplos llamando a la funcion que los crea 
+                    resultados.extend(generar_triplos(codigo_intermedio))
+              a resultados tambien se mete los triplos optimizados llamando a la funcion que 
+              los crea 
+                    resultados.extend(generar_triplos(codigo_intermedio_opt))
+           4. Cuadruplos
+              a resultados se mete los cuadruplos llamando a la funcion que los crea 
+                    resultados.extend(generar_cuadruplos(codigo_intermedio))
+
+              a resultados tambien se mete los cuadruplos optimizados llamando a la funcion 
+              que los crea 
+                    resultados.extend(generar_cuadruplos(codigo_intermedio_opt))
+
+      *Finalmente dentro de este try se retorn esa es la que es retornada con el return     
+3-Volvemos a la funcion main() y simplemente se guardan los resultados y se meten a a un archivo llamado resultados.txt en la linea:
+        guardar_resultados(ruta_salida, resultados_totales, tabla_simbolos)
+
+
+```
+
+           
+
+
+
+  
+
+  
